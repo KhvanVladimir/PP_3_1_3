@@ -1,7 +1,6 @@
 package ru.kata.spring.boot_security.demo.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -11,9 +10,6 @@ import ru.kata.spring.boot_security.demo.service.RoleService;
 import ru.kata.spring.boot_security.demo.service.UserServiceImpl;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 
 @Controller
 @RequestMapping
@@ -30,27 +26,30 @@ public class UserController {
     @GetMapping ("/user")
     public String showUser(Principal principal, Model model){
         model.addAttribute("user", a.findUserByName(principal.getName()));
+        model.addAttribute("userRoles", getRoles(principal.getName()));
+        model.addAttribute("userName", principal.getName());
         return "user";
     }
 
     @GetMapping ("/admin/users")
     public String getUsers(Model model, Principal principal){
         model.addAttribute("users", a.listUsers());
-
-        String roles = "";
-        for (Role role : a.findUserByName(principal.getName()).getRoles()) {
-            roles += role.getName() + " ";
-        }
-
         model.addAttribute("userName", principal.getName());
         model.addAttribute("userE", new User());
-        model.addAttribute("userRoles", roles);
+        model.addAttribute("userRoles", getRoles(principal.getName()));
         model.addAttribute("roles", r.findAll());
         model.addAttribute("newUser", new User());
         model.addAttribute("user", a.findUserByName(principal.getName()));
         return "users";
     }
 
+    String getRoles(String name) {
+        String roles = "";
+        for (Role role : a.findUserByName(name).getRoles()) {
+            roles += role.getName() + " ";
+        }
+        return roles;
+    }
     @GetMapping ("/admin/users/{id}")
     public String getUser(@PathVariable("id") int id, Model model){
         model.addAttribute("user", a.getUser(id));
@@ -87,7 +86,7 @@ public class UserController {
     }
 
     @GetMapping ("/admin/users/{id}/delete")
-    public String deleteUser(@PathVariable("id") int id, Model model){
+    public String deleteUser(@PathVariable("id") int id){
         a.delete(id);
         return "redirect:/admin/users";
     }
